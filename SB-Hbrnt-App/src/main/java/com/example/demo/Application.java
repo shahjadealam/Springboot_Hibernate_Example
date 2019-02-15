@@ -14,10 +14,10 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @SpringBootApplication(exclude = HibernateJpaAutoConfiguration.class)
 @EnableSwagger2
-public class SbHbrntAppApplication  {
+public class Application  {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SbHbrntAppApplication.class, args);
+		SpringApplication.run(Application.class, args);
 	}
 
 	@Bean
