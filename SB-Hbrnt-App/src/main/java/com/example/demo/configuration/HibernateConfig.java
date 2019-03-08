@@ -1,15 +1,16 @@
 package com.example.demo.configuration;
 
+import java.util.Properties;
+
 import javax.sql.DataSource;
 
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.orm.hibernate5.HibernateTransactionManager;
-import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
@@ -31,14 +32,24 @@ public class HibernateConfig {
 	@Value("${spring.jpa.show-sql}")
 	private String showsql;
 
-	@Value("${spring.jpa.properties.hibernate.dialect")
+	@Value("${spring.jpa.properties.hibernate.dialect}")
 	private String dialect;
 
-	@Value("${spring.jpa.hibernate.ddl-auto}")
+	@Value("${spring.jpa.hibernate.ddl}")
 	private String ddl;
 
 	@Value("${spring.jpa.hibernate.packagetoscan}")
 	private String packageToScan;
+
+	@Bean
+	public LocalSessionFactoryBean sessionFactory() {
+		LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
+		sessionFactory.setDataSource(getDataSource());
+		sessionFactory.setPackagesToScan(packageToScan);
+		sessionFactory.setHibernateProperties(hibernateProperties());
+
+		return sessionFactory;
+	}
 
 	@Bean(name = "dataSource")
 	public DataSource getDataSource() {
@@ -47,58 +58,18 @@ public class HibernateConfig {
 		return dataSource;
 	}
 
-	@Bean(name = "sessionFactory")
-	public SessionFactory getSessionFactory(DataSource dataSource) {
-		LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource);
-		sessionBuilder.scanPackages("com.example.demo.*");
-		return sessionBuilder.buildSessionFactory();
-	}
+	private final Properties hibernateProperties() {
+		Properties hibernateProperties = new Properties();
+		hibernateProperties.setProperty("hibernate.hbm2ddl.auto", ddl);
+		hibernateProperties.setProperty("hibernate.dialect", dialect);
 
-	@Bean(name = "transactionManager")
-	public HibernateTransactionManager getTransactionManager(SessionFactory sessionFactory) {
-		HibernateTransactionManager transactionManager = new HibernateTransactionManager(sessionFactory);
-		return transactionManager;
+		return hibernateProperties;
 	}
 
 	@Bean
-	public DataSourceInitializer dataSourceInitializer(final DataSource dataSource) {
-		final DataSourceInitializer initializer = new DataSourceInitializer();
-		initializer.setDataSource(dataSource);
-		return initializer;
+	public PlatformTransactionManager hibernateTransactionManager() {
+		HibernateTransactionManager transactionManager = new HibernateTransactionManager();
+		transactionManager.setSessionFactory(sessionFactory().getObject());
+		return transactionManager;
 	}
-	/*
-	 * @Bean public DataSource dataSource() { DriverManagerDataSource dataSource =
-	 * new DriverManagerDataSource(); dataSource.setUrl(dburl);
-	 * dataSource.setDriverClassName(drivername);
-	 * dataSource.setUsername(dbusername); dataSource.setPassword(dbpassword);
-	 * 
-	 * return dataSource; }
-	 */
-
-	/*
-	 * 
-	 * @Bean public LocalSessionFactoryBean sessionFactory() {
-	 * 
-	 * LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
-	 * sessionFactory.setDataSource(dataSource());
-	 * sessionFactory.setPackagesToScan(packageToScan); Properties properties = new
-	 * Properties(); properties.put("hibernate-dialect", dialect);
-	 * properties.put("hibernate-show-sql", showsql);
-	 * properties.put("hibernate-ddl-auto", ddl);
-	 * 
-	 * sessionFactory.setHibernateProperties(properties);
-	 * 
-	 * return sessionFactory;
-	 * 
-	 * }
-	 * 
-	 * @Bean public HibernateTransactionManager transactionManager() {
-	 * HibernateTransactionManager hibernateTransactionManager = new
-	 * HibernateTransactionManager();
-	 * hibernateTransactionManager.setSessionFactory(sessionFactory().getObject());
-	 * 
-	 * return hibernateTransactionManager;
-	 * 
-	 * }
-	 */
 }

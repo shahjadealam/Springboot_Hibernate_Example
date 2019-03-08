@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import com.example.demo.entity.Customer;
 
-@Repository
 @Transactional
+@Repository
 public class CustomerDao {
 
 	@Autowired
